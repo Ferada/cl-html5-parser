@@ -322,7 +322,7 @@
                              ("xml:base" . ("xml" "base" ,(find-namespace "xml")))
                              ("xml:lang" . ("xml" "lang" ,(find-namespace "xml")))
                              ("xml:space" . ("xml" "space" ,(find-namespace "xml")))
-                             ("xmlns" . (nil "xmlns" (find-namespace "xmlns")))
+                             ("xmlns" . (nil "xmlns" ,(find-namespace "xmlns")))
                              ("xmlns:xlink" . ("xmlns" "xlink" ,(find-namespace "xmlns"))))))
 
 (defun reset-insertion-mode ()
@@ -561,9 +561,12 @@
     ;; XXX Need a check here to see if the first start tag token emitted is
     ;; this token... If it's not, invoke self.parser.parseError().
     (let ((root-element (first open-elements)))
+      (adjust-foreign-attributes token)
       (loop for (name . value) in (getf token :data)
-            do (unless (element-attribute root-element name)
-                 (setf (element-attribute root-element name) value))))
+            do (let ((namespace (if (stringp name) NIL (third name)))
+                     (name (if (stringp name) name (second name))))
+                 (unless (element-attribute root-element name namespace)
+                   (setf (element-attribute root-element name namespace) value)))))
     (setf first-start-tag nil)
     nil))
 
